@@ -4,185 +4,188 @@ This document describes a fully automated infrastructure setup on AWS using Terr
 Amazon EKS for container orchestration
 
 
-Amazon RDS (PostgreSQL) as the backend database
+        Amazon RDS (PostgreSQL) as the backend database
 
 
-Amazon ECR for storing Docker images
+        Amazon ECR for storing Docker images
 
 
-GitLab as the source code and CI/CD platform
+        GitLab as the source code and CI/CD platform
 
 
-AWS Classic Load Balancer (CLB) to expose the application
+        AWS Classic Load Balancer (CLB) to expose the application
 
 
-Amazon S3 for remote Terraform state
+        Amazon S3 for remote Terraform state
 
 
-Bastion Host for secure database access
+        Bastion Host for secure database access
 
 
-AWS Region: ap-south-1 (Mumbai)
+        AWS Region: ap-south-1 (Mumbai)
 
 
 
 Components
 1. EKS Cluster
-Provisioned using Terraform
+        Provisioned using Terraform
 
 
-Deployed in AWS Region ap-south-1 using 2 Availability Zones for high availability
+        Deployed in AWS Region ap-south-1 using 2 Availability Zones for high availability
 
 
-Configured with 2 active worker nodes, scaling up to 3 nodes maximum
+        Configured with 2 active worker nodes, scaling up to 3 nodes maximum
 
 
-Node group spans both Availability Zones
+        Node group spans both Availability Zones
 
 
-Hosts the Strapi application as a Kubernetes deployment with 3 pods
+        Hosts the Strapi application as a Kubernetes deployment with 3 pods
 
 
-GitLab Kubernetes Agent installed for CI/CD integration
+        GitLab Kubernetes Agent installed for CI/CD integration
 
 
 2. GitLab CI/CD
-GitLab repository stores both the Strapi code and Kubernetes YAML manifests
+        GitLab repository stores both the Strapi code and Kubernetes YAML manifests
 
 
-On each commit:
+        On each commit:
 
 
-Docker image is built
+        Docker image is built
 
 
-Image is pushed to Amazon ECR
+        Image is pushed to Amazon ECR
 
 
-Kubernetes manifests are applied to EKS
+        Kubernetes manifests are applied to EKS
 
 
-GitLab Agent ensures seamless GitOps-style deployment
+        GitLab Agent ensures seamless GitOps-style deployment
 
 
-CI/CD variables hold secrets and environment configuration
+        CI/CD variables hold secrets and environment configuration
 
 
 3. Amazon ECR
-Used as the container registry for application images
+        Used as the container registry for application images
 
 
-EKS cluster uses an imagePullSecret to authenticate and pull from ECR
+        EKS cluster uses an imagePullSecret to authenticate and pull from ECR
 
 
 4. AWS Classic Load Balancer (CLB)
-Application is exposed via a Kubernetes Service of type LoadBalancer
+        Application is exposed via a Kubernetes Service of type LoadBalancer
 
 
-aws-load-balancer-controller (with CLB support) is installed in EKS
+        aws-load-balancer-controller (with CLB support) is installed in EKS
 
 
-Associated with an IAM service account with the appropriate policies
+        Associated with an IAM service account with the appropriate policies
 
 
-Automatically provisions and configures CLB for external access
+        Automatically provisions and configures CLB for external access
 
 
 5. Amazon RDS (PostgreSQL)
-Managed PostgreSQL database instance
+        Managed PostgreSQL database instance
 
 
-Hosted in a private subnet to prevent direct internet access
+        Hosted in a private subnet to prevent direct internet access
 
 
-Access restricted to a Bastion Host for security
+        Access restricted to a Bastion Host for security
 
 
 6. Bastion Host
-EC2 instance deployed in a public subnet
+        EC2 instance deployed in a public subnet
 
 
-Used exclusively to SSH into the private network and access RDS
+        Used exclusively to SSH into the private network and access RDS
 
 
-Acts as a secure entry point for database administration
+        Acts as a secure entry point for database administration
 
 
 7. Terraform & S3 Backend
-Infrastructure is provisioned using Terraform modules
+        Infrastructure is provisioned using Terraform modules
 
 
-Remote state is stored in Amazon S3
+        Remote state is stored in Amazon S3
 
 
-Enables team collaboration and state locking
+        Enables team collaboration and state locking
 
 
 8. IAM Policy for AWS Load Balancer Controller
-This IAM policy grants permissions necessary for the AWS Load Balancer Controller (used in EKS/Kubernetes clusters) to:
-Create & configure ELBs (Classic, Application, and Network)
+        This IAM policy grants permissions necessary for the AWS Load Balancer Controller (used in EKS/Kubernetes clusters) to:
+        Create & configure ELBs (Classic, Application, and Network)
 
 
-Modify Security Groups
+        Modify Security Groups
 
 
-Work with ACM, IAM certificates, WAF, and AWS Shield
+        Work with ACM, IAM certificates, WAF, and AWS Shield
 
 
-Register targets (EC2 instances or IPs)
+        Register targets (EC2 instances or IPs)
 
 
-Attach tags to identify and track cluster-owned resources
+        Attach tags to identify and track cluster-owned resources
 
 
-These permissions are implemented via a custom IAM policy attached to a dedicated role for the Load Balancer Controller. This role is then associated with a Kubernetes service account using IAM Roles for Service Accounts (IRSA), enabling secure and granular access from within the EKS cluster.
+        These permissions are implemented via a custom IAM policy attached to a dedicated role for the Load Balancer Controller. This role is then associated with a Kubernetes service    account using IAM Roles for Service Accounts (IRSA), enabling secure and granular access from within the EKS cluster.
 
-Workflow Summary
-Developer pushes code to GitLab repo.
+9. Other files
+  I've updated the document to clarify that variables.tf and output.tf are part of the repo, while terraform.tfvars—containing sensitive values like db_instance_password, bastion_ami_id, and bastion_ssh_key_name—is intentionally not committed.
 
-
-GitLab CI/CD pipeline triggers:
-
-
-Builds Docker image
+10. Workflow Summary
+        Developer pushes code to GitLab repo.
 
 
-Pushes image to ECR
+        GitLab CI/CD pipeline triggers:
 
 
-Applies Kubernetes manifests to EKS
+        Builds Docker image
 
 
-EKS pulls the image using ECR credentials and deploys pods
+        Pushes image to ECR
 
 
-aws-load-balancer-controller provisions a CLB to expose the application
+        Applies Kubernetes manifests to EKS
 
 
-Application connects to RDS (PostgreSQL) via internal networking
+        EKS pulls the image using ECR credentials and deploys pods
 
 
-Bastion Host allows secure access to the database
+        aws-load-balancer-controller provisions a CLB to expose the application
 
 
-Terraform state is stored in S3 to support collaborative infrastructure management
+        Application connects to RDS (PostgreSQL) via internal networking
+
+
+        Bastion Host allows secure access to the database
+
+
+        Terraform state is stored in S3 to support collaborative infrastructure management
 
 
 
-Security and Best Practices
-IAM Roles and Policies for least privilege
+11. Security and Best Practices
+        IAM Roles and Policies for least privilege
 
 
-GitLab variables for managing secrets securely
+        GitLab variables for managing secrets securely
 
 
-Private subnets for database resources
+        Private subnets for database resources
 
 
-S3 backend with state locking and versioning
+        S3 backend with state locking and versioning
 
 
-Bastion host access restricted via security groups
+        Bastion host access restricted via security groups
 
 
 
