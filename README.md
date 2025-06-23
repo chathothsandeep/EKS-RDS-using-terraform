@@ -1,7 +1,8 @@
 Overview
 
 This document describes a fully automated infrastructure setup on AWS using Terraform, GitLab CI/CD, and Kubernetes, designed to host a Strapi-based application. The infrastructure includes:
-Amazon EKS for container orchestration
+
+        Amazon EKS for container orchestration
 
 
         Amazon RDS (PostgreSQL) as the backend database
