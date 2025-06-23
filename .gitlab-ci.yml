@@ -44,7 +44,7 @@ deploy:
     entrypoint: [""]
   script:
     - echo "Deploying to DEVELOPMENT..."
-    - kubectl config use-context ceegees/aws-eks-test-dev:aws-eks-test-dev
+    - kubectl config use-context <<reponame>>/aws-eks-test-dev:aws-eks-test-dev
     - sed -i "s|__BE_IMAGE_PATH__|$BE_DEV_IMAGE_PATH|g" $CI_PROJECT_DIR/_devops/k8s/manifest.yaml
     - sed -i "s|__VERSION__|$APP_VERSION|g" $CI_PROJECT_DIR/src/extensions/users-permissions/controllers/auth.js
     - kubectl delete deploy be-test -n test-ns --ignore-not-found

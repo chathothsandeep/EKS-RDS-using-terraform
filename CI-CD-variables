@@ -1,8 +1,10 @@
+## Variable which are used for GitLab CI/CD
+
 AWS_REGION             
 AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 ECR_REGISTRY_DEV     ## ECR registry complete url
 ECR_REPO_NAME_DEV
-ENV_TEST_DEV      ## variables used for application.
+ENV_TEST_DEV         ## variables used for application.
 
 
