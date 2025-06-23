@@ -191,8 +191,9 @@ Components
 
 
         Bastion host access restricted via security groups
+        
 
-
+12. Note: I've added that the .gitlab-ci.yml and Dockerfile are included in the same GitLab repository as the application code.
 
 This setup ensures a fully automated, secure, and scalable deployment environment for the Strapi application using modern DevOps practices and AWS-native tools.
 
