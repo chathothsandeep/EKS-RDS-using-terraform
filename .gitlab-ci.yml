@@ -1,0 +1,55 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  AWS_REGION: "ap-south-1"
+  BE_DEV_IMAGE_TAG: "development-$CI_COMMIT_SHA"
+  BE_DEV_IMAGE_PATH: "$ECR_REGISTRY_DEV/$ECR_REPO_NAME_DEV:$BE_DEV_IMAGE_TAG"
+  APP_VERSION: "$(date -u  '+%Y.%m-%d.%H.%M')"
+
+.default-job-template:
+  image: amazon/aws-cli
+  before_script:
+    - echo "Logging in to DEV ECR..."
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY_DEV
+
+build:
+  stage: build
+  extends: .default-job-template
+  script:
+    - echo "Using development .env"
+    - cat $ENV_TEST_DEV  > .env
+    - docker build -t $BE_DEV_IMAGE_PATH .
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^release\/.+/'
+  tags:
+    - gitlab-runner
+
+push:
+  stage: push
+  extends: .default-job-template
+  script:
+    - docker push $BE_DEV_IMAGE_PATH
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^release\/.+/'
+  tags:
+    - gitlab-runner
+
+deploy:
+  stage: deploy
+  image:
+    name: test/development
+    entrypoint: [""]
+  script:
+    - echo "Deploying to DEVELOPMENT..."
+    - kubectl config use-context ceegees/aws-eks-test-dev:aws-eks-test-dev
+    - sed -i "s|__BE_IMAGE_PATH__|$BE_DEV_IMAGE_PATH|g" $CI_PROJECT_DIR/_devops/k8s/manifest.yaml
+    - sed -i "s|__VERSION__|$APP_VERSION|g" $CI_PROJECT_DIR/src/extensions/users-permissions/controllers/auth.js
+    - kubectl delete deploy be-test -n test-ns --ignore-not-found
+    - kubectl apply -f $CI_PROJECT_DIR/_devops/k8s/manifest.yaml
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^release\/.+/'
+  tags:
+    - gitlab-runner

@@ -1,6 +1,8 @@
 Overview
 
-This document describes a fully automated infrastructure setup on AWS using Terraform, GitLab CI/CD, and Kubernetes, designed to host a Strapi-based application. The infrastructure includes:
+This document describes a fully automated infrastructure setup on AWS using Terraform, GitLab CI/CD, and Kubernetes, designed to host a Strapi-based application. After provisioning the infrastructure, you can authenticate to AWS using the AWS CLI and retrieve the EKS cluster's kubeconfig by running aws eks update-kubeconfig --region ap-south-1 --name <cluster_name>, which enables kubectl access to the EKS cluster.
+
+ The infrastructure includes:
 
         Amazon EKS for container orchestration
 
@@ -109,10 +111,8 @@ Components
         Acts as a secure entry point for database administration
 
 
-7. Terraform & S3 Backend
-        Infrastructure is provisioned using Terraform modules
-
-
+7. S3 Backend
+        
         Remote state is stored in Amazon S3
 
 
@@ -120,7 +120,9 @@ Components
 
 
 8. IAM Policy for AWS Load Balancer Controller
+
         This IAM policy grants permissions necessary for the AWS Load Balancer Controller (used in EKS/Kubernetes clusters) to:
+
         Create & configure ELBs (Classic, Application, and Network)
 
 
@@ -139,9 +141,10 @@ Components
         These permissions are implemented via a custom IAM policy attached to a dedicated role for the Load Balancer Controller. This role is then associated with a Kubernetes service    account using IAM Roles for Service Accounts (IRSA), enabling secure and granular access from within the EKS cluster.
 
 9. Other files
-  I've updated the document to clarify that variables.tf and output.tf are part of the repo, while terraform.tfvars—containing sensitive values like db_instance_password, bastion_ami_id, and bastion_ssh_key_name—is intentionally not committed.
+        I've updated the document to clarify that variables.tf and output.tf are part of the repo, while terraform.tfvars—containing sensitive values like db_instance_password, bastion_ami_id, and bastion_ssh_key_name—is intentionally not committed.
 
-10. Workflow Summary
+10. Workflow 
+
         Developer pushes code to GitLab repo.
 
 
@@ -174,6 +177,7 @@ Components
 
 
 11. Security and Best Practices
+
         IAM Roles and Policies for least privilege
 
 

@@ -1,0 +1,47 @@
+# manifest for application which are running in EKS.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be-test
+  namespace: test-ns
+spec:
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: be-test
+  template:
+    metadata:
+      labels:
+        app: be-test
+    spec:
+      imagePullSecrets:
+        - name: dev-ecr-pull-secret
+      containers:
+        - name: be-test
+          image: __BE_IMAGE_PATH__
+          imagePullPolicy: Always
+          command: ["npm"]
+          args: ["run", "start"]
+          env:
+            - name: NODE_ENV
+              value: "development"
+          ports:
+           - containerPort: 1600
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: be-test
+  namespace: test-ns
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-security-groups: "<<group name>>" # this group name we can get from outputs.tf
+spec:
+  selector:
+    app: be-test
+  ports:
+    - protocol: TCP
+      port: 80         
+      targetPort: 1600  
+  type: LoadBalancer
