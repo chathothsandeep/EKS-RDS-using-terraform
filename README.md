@@ -197,3 +197,6 @@ Components
 
 This setup ensures a fully automated, secure, and scalable deployment environment for the Strapi application using modern DevOps practices and AWS-native tools.
 
+----------------
+SANDEEP CHATHOTH
+----------------
